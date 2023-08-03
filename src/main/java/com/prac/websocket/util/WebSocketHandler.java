@@ -13,8 +13,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 @Slf4j
 public class WebSocketHandler extends TextWebSocketHandler {
-
-
     private static Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
 
     @Override
@@ -22,7 +20,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
         String payload = message.getPayload();
         log.info("payload : " + payload);
 
-        for(WebSocketSession sess: sessions.values()) {
+        for (WebSocketSession sess : sessions.values()) {
             sess.sendMessage(message);
         }
     }
@@ -31,7 +29,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
 
-        sessions.put(session.getId(),session);
+        sessions.put(session.getId(), session);
 
         log.info(session + " 클라이언트 접속");
     }

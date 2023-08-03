@@ -4,9 +4,11 @@ import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedList;
+import java.util.Map;
 
 @Component
 public class UserMatchList {
+    //Map으로 구현했을 때
     private final LinkedList<StompSession> englishUserMatchList = new LinkedList<>();
     private final LinkedList<StompSession> koreanUserMatchList = new LinkedList<>();
 

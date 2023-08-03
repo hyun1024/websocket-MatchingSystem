@@ -1,6 +1,7 @@
 package com.prac.websocket.util;
 
 import com.prac.websocket.entity.UserMatchList;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -12,6 +13,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 import java.util.Map;
 
 @Component
+@Slf4j
 public class CustomHandshakeInterceptor implements HandshakeInterceptor {
     private final UserMatchList userMatchList;
 
@@ -23,12 +25,15 @@ public class CustomHandshakeInterceptor implements HandshakeInterceptor {
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         // 요청의 헤더에서 언어 정보 추출
+        log.info("language 추출");
         String language = request.getHeaders().getFirst("language");
         if(language!=null){
             findMatch(attributes, language);
+            attributes.put("language", language);
         }
+        log.info("language 저장");
         // 연결 정보에 언어 정보 저장
-        attributes.put("language", language);
+
         return true;
     }
 

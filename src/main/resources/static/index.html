@@ -1,66 +1,82 @@
-<!--<!doctype html>-->
+<!--<!DOCTYPE html>-->
 <!--<html>-->
 <!--<head>-->
+<!--    <title>WebSocket Test</title>-->
 <!--    <meta charset="UTF-8">-->
-<!--    <title>WebSocket 메시지 확인 페이지</title>-->
-<!--    <script src="https://cdn.jsdelivr.net/sockjs/latest/sockjs.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>-->
 <!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>-->
 
+<!--    <script>-->
+<!--        var stompClient = null;-->
+
+<!--        function connect() {-->
+<!--            var language = document.getElementById('language').value;-->
+<!--            var random = Math.random(15) * 100000000000000000;-->
+<!--            var socket = new SockJS('http://localhost:8080/ws');-->
+<!--            stompClient = Stomp.over(socket);-->
+<!--            var headers = { "language": language, "path": random };-->
+<!--            stompClient.connect(headers, function (frame) {-->
+<!--                console.log('Connected: ' + frame);-->
+<!--                basicSubscribe(random);-->
+<!--            });-->
+<!--        }-->
+
+<!--        function basicSubscribe(random) {-->
+<!--            var url = '/topic/test/' + random;-->
+<!--            stompClient.subscribe(url, function (random) {-->
+<!--                console.log('complete subscribe = ' + url + ' : ' + random.body);-->
+<!--            });-->
+<!--        }-->
+
+<!--        function disconnect() {-->
+<!--            if (stompClient !== null) {-->
+<!--                stompClient.disconnect();-->
+<!--                console.log('Disconnected');-->
+<!--            }-->
+<!--        }-->
+
+<!--        function subscribe() {-->
+<!--            var url = document.getElementById('subscribe-url').value;-->
+<!--            stompClient.subscribe(url, function (message) {-->
+<!--                console.log('Received message from ' + url + ': ' + message.body);-->
+<!--                // Perform any additional actions with the received message here-->
+<!--            });-->
+<!--        }-->
+
+<!--        function publish() {-->
+<!--            var url = document.getElementById('publish-url').value;-->
+<!--            var message = document.getElementById('publish-message').value;-->
+<!--            stompClient.send(url, {}, message);-->
+<!--            console.log('Published message to ' + url + ': ' + message);-->
+<!--        }-->
+
+<!--        // 삭제되었습니다-->
+
+<!--    </script>-->
 <!--</head>-->
 <!--<body>-->
-<!--<h1>WebSocket 메시지 확인 페이지</h1>-->
+<!--<h1>WebSocket Test</h1>-->
+<!--<p>Check the browser console for incoming messages.</p>-->
 
-<!--<div id="log"></div>-->
+<!--&lt;!&ndash; 추가된 부분: 입력 언어 받아오기 &ndash;&gt;-->
+<!--<h2>Enter Language:</h2>-->
+<!--<select id="language">-->
+<!--    <option value="KOREAN">KOREAN</option>-->
+<!--    <option value="ENGLISH">ENGLISH</option>-->
+<!--</select>-->
 
-<!--<script>-->
-<!--    var socket = new WebSocket('ws://localhost:8080/ws');-->
-<!--    // WebSocket 연결 생성-->
+<!--&lt;!&ndash; 추가된 부분: 매칭 탐색 버튼 &ndash;&gt;-->
+<!--<button onclick="connect()">매칭 탐색</button>-->
 
-<!--    socket.onopen = function () {-->
-<!--        console.log("너도 뜨니?")-->
-<!--        alert('WebSocket 연결이 시작되었습니다.');-->
-<!--    };-->
-<!--    // STOMP 클라이언트 생성-->
-<!--    const client = Stomp.over(socket);-->
+<!--<h2>Subscribe to URL:</h2>-->
+<!--<input type="text" id="subscribe-url" placeholder="Enter URL to subscribe" />-->
+<!--<button onclick="subscribe()">Subscribe</button>-->
 
-<!--    // 연결 성공 시 호출되는 콜백 함수-->
-<!--    const onConnect = () => {-->
-<!--        console.log('STOMP 브로커에 연결되었습니다.');-->
-
-<!--// 구독 설정-->
-<!--        client.subscribe('/topic/test', (message) => {-->
-<!--            const body = message.body;-->
-<!--            console.log('메시지 수신:', body);-->
-
-<!--// 받은 메시지 처리를 여기에 작성하세요.-->
-<!--        });-->
-<!--    };-->
-
-<!--    // 연결 해제 시 호출되는 콜백 함수-->
-<!--    const onDisconnect = () => {-->
-<!--        console.log('STOMP 브로커와의 연결이 해제되었습니다.');-->
-<!--    };-->
-
-<!--    // STOMP 브로커에 연결-->
-<!--    client.connect({}, onConnect, onDisconnect);-->
-
-<!--    socket.onerror = function (event) {-->
-<!--        alert('WebSocket 에러: ', event);-->
-<!--    };-->
-
-<!--    socket.onclose = function (event) {-->
-<!--        console.log('onclose : ' + event)-->
-<!--        alert('WebSocket 연결이 종료되었습니다.', event);-->
-<!--    };-->
-
-<!--    // 메시지 수신-->
-<!--    socket.onmessage = function (event) {-->
-<!--        console.log('WebSocket으로부터 메시지를 수신했습니다:', event.data);-->
-<!--        var logDiv = document.getElementById('log');-->
-<!--        logDiv.innerHTML = logDiv.innerHTML + '<br/>' + event.data;-->
-<!--    };-->
-
-<!--</script>-->
+<!--<h2>Publish Message:</h2>-->
+<!--<input type="text" id="publish-url" placeholder="Enter URL to publish" />-->
+<!--<input type="text" id="publish-message" placeholder="Enter message to publish" />-->
+<!--<button onclick="publish()">Publish</button>-->
 
 <!--</body>-->
 <!--</html>-->
@@ -68,19 +84,52 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>WebSocket Test</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
     <script>
         var stompClient = null;
 
         function connect() {
-            var socket = new SockJS('http://localhost:8080/ws'); // Replace '/websocket-endpoint' with your actual WebSocket endpoint URL
+            let language = document.getElementById('language').value;
+            let random = Math.random(15) * 100000000000000000;
+            let socket = new SockJS('http://localhost:8080/ws');
             stompClient = Stomp.over(socket);
-            stompClient.connect({}, function (frame) {
-                console.log('Connected: ' + frame);
+            let headers = {"language": language, "path": random};
+            stompClient.connect(headers, function () {
+                console.log("커넥트 완료")
+                basicSubscribe(random);
             });
         }
+
+        function basicSubscribe(random) {
+            let url = '/match/' + random;
+            console.log("구독 시작. 목표 endpoint = " + url)
+            stompClient.subscribe(url, onMessageReceived, {authorization: "token"});
+            checkDirectMatch(random);
+
+        }
+
+        function checkDirectMatch(random) {
+            let sendurl = '/request/' + random
+            stompClient.send(sendurl, {}, "directMatching check");
+
+
+        }
+
+        function onMessageReceived(data) {
+            if(data.headers.isMatch==="true"){
+                stompClient.subscribe('/match/'+data.body, webRtcMessage, {authorization: "token"});
+            }
+        }
+        function webRtcMessage(data){
+        }
+        function onError(error) {
+            console.log("onError 발동");
+        }
+
 
         function disconnect() {
             if (stompClient !== null) {
@@ -90,27 +139,24 @@
         }
 
         function subscribe() {
-            var url = document.getElementById('subscribe-url').value;
+            let url = document.getElementById('subscribe-url').value;
             stompClient.subscribe(url, function (message) {
                 console.log('Received message from ' + url + ': ' + message.body);
                 // Perform any additional actions with the received message here
             });
         }
 
+        function unsubscribe() {
+            let url = document.getElementById('unsubscribe-url').value;
+            stompClient.unsubscribe(url);
+            console.log('Unsubscribed from ' + url);
+        }
+
         function publish() {
             var url = document.getElementById('publish-url').value;
             var message = document.getElementById('publish-message').value;
             stompClient.send(url, {}, message);
-            console.log('Published message to ' + url + ': ' + message);
         }
-
-        window.onload = function () {
-            connect();
-        };
-
-        window.onbeforeunload = function () {
-            disconnect();
-        };
     </script>
 </head>
 <body>
@@ -118,12 +164,26 @@
 <p>Check the browser console for incoming messages.</p>
 
 <h2>Subscribe to URL:</h2>
-<input type="text" id="subscribe-url" placeholder="Enter URL to subscribe" />
+<input type="text" id="subscribe-url" placeholder="Enter URL to subscribe"/>
 <button onclick="subscribe()">Subscribe</button>
 
 <h2>Publish Message:</h2>
-<input type="text" id="publish-url" placeholder="Enter URL to publish" />
-<input type="text" id="publish-message" placeholder="Enter message to publish" />
+<input type="text" id="publish-url" placeholder="Enter URL to publish"/>
+<input type="text" id="publish-message" placeholder="Enter message to publish"/>
 <button onclick="publish()">Publish</button>
+
+<h2>Enter Language:</h2>
+<select id="language">
+    <option value="KOREAN">KOREAN</option>
+    <option value="ENGLISH">ENGLISH</option>
+</select>
+
+<button onclick="connect()">매칭 탐색</button>
+<button onclick="disconnect()">Disconnect</button> <!-- Disconnect 버튼 추가 -->
+
+<h2>Unsubscribe from URL:</h2>
+<input type="text" id="unsubscribe-url" placeholder="Enter URL to unsubscribe"/>
+<button onclick="unsubscribe()">Unsubscribe</button> <!-- Unsubscribe 버튼 추가 -->
+
 </body>
 </html>

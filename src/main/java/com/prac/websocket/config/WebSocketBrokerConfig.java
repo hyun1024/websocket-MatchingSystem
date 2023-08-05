@@ -1,6 +1,6 @@
 package com.prac.websocket.config;
 
-import com.prac.websocket.entity.UserMatch;
+import com.prac.websocket.service.MatchService;
 import com.prac.websocket.util.CustomChannelInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -12,10 +12,10 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
-    private final UserMatch userMatch;
+    private final MatchService matchService;
 
-    public WebSocketBrokerConfig(UserMatch userMatch) {
-        this.userMatch = userMatch;
+    public WebSocketBrokerConfig(MatchService matchService) {
+        this.matchService = matchService;
     }
 
     @Override
@@ -33,6 +33,6 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(new CustomChannelInterceptor(userMatch));
+        registration.interceptors(new CustomChannelInterceptor(matchService));
     }
 }

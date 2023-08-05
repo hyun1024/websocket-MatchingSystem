@@ -1,17 +1,16 @@
 package com.prac.websocket.controller;
 
-import com.fasterxml.jackson.databind.deser.DataFormatReaders;
-import com.prac.websocket.dto.MatchIdDto;
+import com.prac.websocket.dto.UserMatchDto;
 import com.prac.websocket.service.MatchService;
+import com.prac.websocket.dto.RoomStatusDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,32 +22,32 @@ public class MatchController {
     private final SimpMessageSendingOperations simpMessageSendingOperations;
 
     private final MatchService matchService;
-    @MessageMapping("/english")
-    public void findEnglishUser(Message message){
 
-        simpMessageSendingOperations.convertAndSend("/topic/test", message.getPayload());
-    }
-    @MessageMapping("/korean")
-    public void findKoreanUser(Message message){
-
-        simpMessageSendingOperations.convertAndSend("/match/korean", message.getPayload());
-    }
-
-    @MessageMapping("/{sendurl}")
-    public void checkMatch(@DestinationVariable String sendurl, Message message){
-        Boolean isMatch;
+    @MessageMapping("/{endpoint}")
+    public void checkMatch(@DestinationVariable String endpoint, Message message) {
+        StompHeaderAccessor headerAccessor = StompHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+//        UserMatchDto userMatchDto = UserMatchDto.builder()
+//                .userEndpoint(headerAccessor.getNativeHeader("path").get(0))
+//                .userLanguage(headerAccessor.getNativeHeader("userLanguage").get(0))
+//                .targetLanguage(headerAccessor.getNativeHeader("targetLanguage").get(0))
+//                .userId(headerAccessor.getNativeHeader("userId").get(0))
+//                .build();
+//        matchService.findMatch(userMatchDto);
         Map<String, Object> header = new HashMap<>();
-
-        log.info("controller 진입 sendurl : " + sendurl);
-        String matchId = matchService.checkDirectMatch(sendurl);
-        if(matchId!=null) {
+        log.info("controller 진입 endpoint: " + endpoint);
+        RoomStatusDto roomStatusDto = matchService.checkDirectMatch(headerAccessor.getNativeHeader("userId").get(0));
+        if (roomStatusDto != null) {
             log.info("매칭이 성공하면 이게 뜹니다.");
-            header.put("isMatch", isMatch=true);
-            simpMessageSendingOperations.convertAndSend("/match/"+sendurl, matchId, header);
-        } else{
+            header.put("isMatch", true);
+            header.put("path", roomStatusDto.getWaitUserEndpoint());
+            simpMessageSendingOperations.convertAndSend("/match/" + endpoint, "매칭이 즉시 가능합니다. 헤더의 path를 endpoint로 연결 정보를 전송해주세요.", header);
+            header.remove("path");
+            header.put("path", roomStatusDto.getRequestUserEndpoint());
+            simpMessageSendingOperations.convertAndSend("/match/" + roomStatusDto.getWaitUserEndpoint(), "매칭 유저가 탐지되었습니다. 헤더의 path를 endpoint로 연결 정보를 전송해주세요.", header);
+        } else {
             log.info("매칭이 실패하면 이게 뜹니다.");
-            header.put("isMatch", isMatch=false);
-            simpMessageSendingOperations.convertAndSend("/match/"+sendurl,"조금만 더 기다려주세요.", header);
+            header.put("isMatch", false);
+            simpMessageSendingOperations.convertAndSend("/match/" + endpoint, "현재 매칭 가능한 유저가 없습니다. 조금만 더 기다려주세요.", header);
         }
 
     }

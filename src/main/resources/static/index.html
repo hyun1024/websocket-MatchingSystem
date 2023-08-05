@@ -93,11 +93,13 @@
         var stompClient = null;
 
         function connect() {
-            let language = document.getElementById('language').value;
-            let random = Math.random(15) * 100000000000000000;
+            let random = Math.random(15) * 1000000000000000000;
+            let userLanguage = document.getElementById('userLanguage').value;
+            let targetLanguage = document.getElementById('targetLanguage').value;
+            let userId = document.getElementById('userId').value;
             let socket = new SockJS('http://localhost:8080/ws');
             stompClient = Stomp.over(socket);
-            let headers = {"language": language, "path": random};
+            let headers = {"Authorization": "token","userLanguage" : userLanguage, "targetLanguage" : targetLanguage, "userId": userId, "path" : random};
             stompClient.connect(headers, function () {
                 console.log("커넥트 완료")
                 basicSubscribe(random);
@@ -105,23 +107,31 @@
         }
 
         function basicSubscribe(random) {
+
             let url = '/match/' + random;
             console.log("구독 시작. 목표 endpoint = " + url)
-            stompClient.subscribe(url, onMessageReceived, {authorization: "token"});
-            checkDirectMatch(random);
+            stompClient.subscribe(url, onMessageReceived, {"authorization": "token"});
+            checkMatch(random);
 
         }
 
-        function checkDirectMatch(random) {
-            let sendurl = '/request/' + random
-            stompClient.send(sendurl, {}, "directMatching check");
+        function checkMatch(random) {
+            let userLanguage = document.getElementById('userLanguage').value;
+            let targetLanguage = document.getElementById('targetLanguage').value;
+            let userId = document.getElementById('userId').value;
+            let headers = {"Authorization" : "token", "userLanguage" : userLanguage, "targetLanguage": targetLanguage, "userId":userId, "path" : random }
+            let endpoint = '/request/' + random
+            stompClient.send(endpoint, headers, "directMatching check");
 
 
         }
 
         function onMessageReceived(data) {
             if(data.headers.isMatch==="true"){
-                stompClient.subscribe('/match/'+data.body, webRtcMessage, {authorization: "token"});
+                console.log("매칭 감지 완료. 이제 webRTC 관련 정보를 전송하면 됩니다.");
+                let sendurl = '/match/'+ data.headers.path
+                let headers = {"Authorization": "token"}
+                stompClient.send(sendurl, headers, "안녕? 나는 "+ Math.random(1)*1000000 +"이야!")
             }
         }
         function webRtcMessage(data){
@@ -162,6 +172,24 @@
 <body>
 <h1>WebSocket Test</h1>
 <p>Check the browser console for incoming messages.</p>
+<h2>YourID:</h2>
+<input type="text" id="userId" placeholder="input your ID"/>
+<h2>Enter Your Language: </h2>
+<select id="userLanguage">
+    <option value="KOREAN">KOREAN</option>
+    <option value="ENGLISH">ENGLISH</option>
+</select>
+<div></div>
+<h2>Enter TargetLanguage: </h2>
+<select id="targetLanguage">
+    <option value="ENGLISH">ENGLISH</option>
+    <option value="KOREAN">KOREAN</option>
+
+</select>
+
+<button onclick="connect()">매칭 탐색</button>
+<button onclick="disconnect()">Disconnect</button> <!-- Disconnect 버튼 추가 -->
+
 
 <h2>Subscribe to URL:</h2>
 <input type="text" id="subscribe-url" placeholder="Enter URL to subscribe"/>
@@ -171,15 +199,6 @@
 <input type="text" id="publish-url" placeholder="Enter URL to publish"/>
 <input type="text" id="publish-message" placeholder="Enter message to publish"/>
 <button onclick="publish()">Publish</button>
-
-<h2>Enter Language:</h2>
-<select id="language">
-    <option value="KOREAN">KOREAN</option>
-    <option value="ENGLISH">ENGLISH</option>
-</select>
-
-<button onclick="connect()">매칭 탐색</button>
-<button onclick="disconnect()">Disconnect</button> <!-- Disconnect 버튼 추가 -->
 
 <h2>Unsubscribe from URL:</h2>
 <input type="text" id="unsubscribe-url" placeholder="Enter URL to unsubscribe"/>

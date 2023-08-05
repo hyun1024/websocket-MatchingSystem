@@ -7,18 +7,23 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class UserMatchDto {
-    private String language;
-    private String matchId;
-    private String sessionId;
+    private String userLanguage;
+    private String targetLanguage;
+    private String userEndpoint;
+    private String userId;
     private boolean isMatched = false;
+    private String targetUserId;
     @Builder
-    public UserMatchDto(String language, String matchId,String sessionId) {
-        this.language = language;
-        this.matchId = matchId;
-        this.sessionId = sessionId;
+    public UserMatchDto(String userLanguage, String targetLanguage, String userEndpoint, String userId) {
+        this.userLanguage = userLanguage;
+        this.targetLanguage = targetLanguage;
+        this.userEndpoint = userEndpoint;
+        this.userId = userId;
     }
-    public void successMatching(UserMatchDto userMatchDto) {
+
+   public void successMatch(UserMatchDto userMatchDto){
         this.isMatched = true;
-        this.matchId = userMatchDto.getMatchId();
+        this.targetUserId = userMatchDto.getTargetUserId();
     }
+
 }

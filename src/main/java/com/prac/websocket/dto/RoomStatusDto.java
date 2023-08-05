@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Getter
 @NoArgsConstructor
@@ -15,7 +14,7 @@ public class RoomStatusDto {
     private String requestUserId;
     private String waitUserEndpoint;
     private String requestUserEndpoint;
-    private String createdAt;
+    private LocalDateTime createdAt;
 
     @Builder
     public RoomStatusDto(String waitUserId, String requestUserId, String waitUserEndpoint, String requestUserEndpoint) {
@@ -23,6 +22,6 @@ public class RoomStatusDto {
         this.requestUserId = requestUserId;
         this.waitUserEndpoint = waitUserEndpoint;
         this.requestUserEndpoint = requestUserEndpoint;
-        this.createdAt = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        this.createdAt = LocalDateTime.now();
     }
 }

@@ -11,17 +11,19 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class MatchService {
+
     private final ChatQueue chatQueue;
-    private final ActivateRoom activateRoom;
+    private final ActivateRoom activeRoom;
+
 
     @Autowired
-    public MatchService(ChatQueue chatQueue, ActivateRoom activateRoom) {
+    public MatchService(ChatQueue chatQueue, ActivateRoom activeRoom) {
         this.chatQueue = chatQueue;
-        this.activateRoom = activateRoom;
+        this.activeRoom = activeRoom;
     }
 
-    public RoomStatusDto checkDirectMatch(String userId) {
-        for (RoomStatusDto roomStatusDto : activateRoom.getActivateRooms().values()) {
+    public synchronized RoomStatusDto checkDirectMatch(String userId) {
+        for (RoomStatusDto roomStatusDto : activeRoom.getActivateRooms()) {
             if (roomStatusDto.getRequestUserId().equals(userId)) {
                 return roomStatusDto;
             }
@@ -37,42 +39,44 @@ public class MatchService {
             return null;
         }
         if (chatQueue.getChatQueue().containsKey(userMatchDto.getUserId())) {
-            log.info("이미 대기열에 참여중인 사람입니다. 대기열을 취소 후 다시 시도해주세요.");
-           throw new RuntimeException("이미 대기열에 참여중인 사람입니다. 대기열을 취소 후 다시 시도해주세요.");
+            log.info("이미 대기열에 참여중인 userId가 재시도.");
+            return null;
         }
         searchUserFromCondition(userMatchDto);
         return userMatchDto;
     }
 
     private void directInsertQueueIfFirstUser(UserMatchDto userMatchDto) {
-        chatQueue.getChatQueue().put(userMatchDto.getUserId(), userMatchDto);
         log.info("대기중인 유저가 없으므로 대기리스트에 추가");
+        chatQueue.getChatQueue().put(userMatchDto.getUserId(), userMatchDto);
+
     }
 
-    private void searchUserFromCondition(UserMatchDto requestUserDto) {
+    private UserMatchDto searchUserFromCondition(UserMatchDto requestUserDto) {
         for (UserMatchDto waitUserDto : chatQueue.getChatQueue().values()) {
             if (waitUserDto.getUserLanguage().equals(requestUserDto.getTargetLanguage())) {
-                activateRoom.getActivateRooms().put(waitUserDto.getUserId(),
-                        RoomStatusDto.builder()
-                                .waitUserId(waitUserDto.getUserId())
-                                .requestUserId(requestUserDto.getUserId())
-                                .waitUserEndpoint(waitUserDto.getUserEndpoint())
-                                .requestUserEndpoint(requestUserDto.getUserEndpoint())
-                                .build()
+                activeRoom.getActivateRooms().add(RoomStatusDto.builder()
+                        .waitUserId(waitUserDto.getUserId())
+                        .requestUserId(requestUserDto.getUserId())
+                        .waitUserEndpoint(waitUserDto.getUserEndpoint())
+                        .requestUserEndpoint(requestUserDto.getUserEndpoint())
+                        .build()
                 );
                 chatQueue.getChatQueue().remove(waitUserDto.getUserId());
-                log.info("매칭에 성공했으므로 매치성공여부 update. 남은 " + requestUserDto.getTargetLanguage() + " 사용자 매칭 대기자 : " + chatQueue.getChatQueue().size() + " 명");
-                log.info("추가 후 현재 활성화된 대화 방 수 : " + activateRoom.getActivateRooms().size());
+                log.info("매칭 성공. 남은 " + requestUserDto.getTargetLanguage() + " 매칭 대기자 : " + chatQueue.getChatQueue().size() + " 명");
+                log.info("추가 후 현재 활성화된 대화 방 수 : " + activeRoom.getActivateRooms().size());
                 requestUserDto.successMatch(waitUserDto);
+                return requestUserDto;
             } else {
                 chatQueue.getChatQueue().put(requestUserDto.getUserId(), requestUserDto);
                 log.info("매칭에 실패했으므로 대기 리스트에 추가. 현재 " + requestUserDto.getUserLanguage() + " 사용자 매칭 대기자 : " + chatQueue.getChatQueue().size() + " 명");
-
+                return requestUserDto;
             }
         }
+        return null;
     }
 
-    public synchronized void removeFromList(UserMatchDto userMatchDto) {
-        chatQueue.getChatQueue().remove(userMatchDto.getUserId());
+    public void removeFromList(String userId) {
+        chatQueue.getChatQueue().remove(userId);
     }
 }

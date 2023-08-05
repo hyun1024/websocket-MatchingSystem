@@ -93,24 +93,25 @@
         var stompClient = null;
 
         function connect() {
-            let random = Math.random(15) * 1000000000000000000;
-            let userLanguage = document.getElementById('userLanguage').value;
-            let targetLanguage = document.getElementById('targetLanguage').value;
-            let userId = document.getElementById('userId').value;
+            // let random = Math.random(15) * 1000000000000000000;
+            // let userLanguage = document.getElementById('userLanguage').value;
+            // let targetLanguage = document.getElementById('targetLanguage').value;
+            // let userId = document.getElementById('userId').value;
             let socket = new SockJS('http://localhost:8080/ws');
             stompClient = Stomp.over(socket);
-            let headers = {"Authorization": "token","userLanguage" : userLanguage, "targetLanguage" : targetLanguage, "userId": userId, "path" : random};
+            let headers = {"Authorization": "token"};
             stompClient.connect(headers, function () {
                 console.log("커넥트 완료")
-                basicSubscribe(random);
+                basicSubscribe();
             });
         }
 
-        function basicSubscribe(random) {
-
+        function basicSubscribe() {
+            let random = Math.random(15) * 1000000000000000000;
             let url = '/match/' + random;
             console.log("구독 시작. 목표 endpoint = " + url)
             stompClient.subscribe(url, onMessageReceived, {"authorization": "token"});
+            console.log("구독 완료.")
             checkMatch(random);
 
         }
@@ -128,45 +129,46 @@
 
         function onMessageReceived(data) {
             if(data.headers.isMatch==="true"){
-                console.log("매칭 감지 완료. 이제 webRTC 관련 정보를 전송하면 됩니다.");
                 let sendurl = '/match/'+ data.headers.path
                 let headers = {"Authorization": "token"}
-                stompClient.send(sendurl, headers, "안녕? 나는 "+ Math.random(1)*1000000 +"이야!")
+                stompClient.send(sendurl, headers, "안녕? 나는 "+ document.getElementById('userId').value + " 이야!")
             }
         }
         function webRtcMessage(data){
         }
-        function onError(error) {
-            console.log("onError 발동");
-        }
+        // function onError(error) {
+        //     console.log("onError 발동");
+        // }
 
 
         function disconnect() {
             if (stompClient !== null) {
-                stompClient.disconnect();
-                console.log('Disconnected');
+                stompClient.disconnect(defaultCallback,{"userId" : document.getElementById('userId').value});
             }
         }
-
-        function subscribe() {
-            let url = document.getElementById('subscribe-url').value;
-            stompClient.subscribe(url, function (message) {
-                console.log('Received message from ' + url + ': ' + message.body);
-                // Perform any additional actions with the received message here
-            });
+        function defaultCallback(){
+            console.log('Disconnect완료')
         }
-
-        function unsubscribe() {
-            let url = document.getElementById('unsubscribe-url').value;
-            stompClient.unsubscribe(url);
-            console.log('Unsubscribed from ' + url);
-        }
-
-        function publish() {
-            var url = document.getElementById('publish-url').value;
-            var message = document.getElementById('publish-message').value;
-            stompClient.send(url, {}, message);
-        }
+        //
+        // function subscribe() {
+        //     let url = document.getElementById('subscribe-url').value;
+        //     stompClient.subscribe(url, function (message) {
+        //         console.log('Received message from ' + url + ': ' + message.body);
+        //         // Perform any additional actions with the received message here
+        //     });
+        // }
+        //
+        // function unsubscribe() {
+        //     let url = document.getElementById('unsubscribe-url').value;
+        //     stompClient.unsubscribe(url);
+        //     console.log('Unsubscribed from ' + url);
+        // }
+        //
+        // function publish() {
+        //     var url = document.getElementById('publish-url').value;
+        //     var message = document.getElementById('publish-message').value;
+        //     stompClient.send(url, {}, message);
+        // }
     </script>
 </head>
 <body>
@@ -186,23 +188,8 @@
     <option value="KOREAN">KOREAN</option>
 
 </select>
-
 <button onclick="connect()">매칭 탐색</button>
+
 <button onclick="disconnect()">Disconnect</button> <!-- Disconnect 버튼 추가 -->
-
-
-<h2>Subscribe to URL:</h2>
-<input type="text" id="subscribe-url" placeholder="Enter URL to subscribe"/>
-<button onclick="subscribe()">Subscribe</button>
-
-<h2>Publish Message:</h2>
-<input type="text" id="publish-url" placeholder="Enter URL to publish"/>
-<input type="text" id="publish-message" placeholder="Enter message to publish"/>
-<button onclick="publish()">Publish</button>
-
-<h2>Unsubscribe from URL:</h2>
-<input type="text" id="unsubscribe-url" placeholder="Enter URL to unsubscribe"/>
-<button onclick="unsubscribe()">Unsubscribe</button> <!-- Unsubscribe 버튼 추가 -->
-
 </body>
 </html>

@@ -1,85 +1,195 @@
+<!--&lt;!&ndash;<!DOCTYPE html>&ndash;&gt;-->
+<!--&lt;!&ndash;<html>&ndash;&gt;-->
+<!--&lt;!&ndash;<head>&ndash;&gt;-->
+<!--&lt;!&ndash;    <title>WebSocket Test</title>&ndash;&gt;-->
+<!--&lt;!&ndash;    <meta charset="UTF-8">&ndash;&gt;-->
+<!--&lt;!&ndash;    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>&ndash;&gt;-->
+<!--&lt;!&ndash;    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>&ndash;&gt;-->
+<!--&lt;!&ndash;    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>&ndash;&gt;-->
+
+<!--&lt;!&ndash;    <script>&ndash;&gt;-->
+<!--&lt;!&ndash;        var stompClient = null;&ndash;&gt;-->
+
+<!--&lt;!&ndash;        function connect() {&ndash;&gt;-->
+<!--&lt;!&ndash;            var language = document.getElementById('language').value;&ndash;&gt;-->
+<!--&lt;!&ndash;            var random = Math.random(15) * 100000000000000000;&ndash;&gt;-->
+<!--&lt;!&ndash;            var socket = new SockJS('http://localhost:8080/ws');&ndash;&gt;-->
+<!--&lt;!&ndash;            stompClient = Stomp.over(socket);&ndash;&gt;-->
+<!--&lt;!&ndash;            var headers = { "language": language, "path": random };&ndash;&gt;-->
+<!--&lt;!&ndash;            stompClient.connect(headers, function (frame) {&ndash;&gt;-->
+<!--&lt;!&ndash;                console.log('Connected: ' + frame);&ndash;&gt;-->
+<!--&lt;!&ndash;                basicSubscribe(random);&ndash;&gt;-->
+<!--&lt;!&ndash;            });&ndash;&gt;-->
+<!--&lt;!&ndash;        }&ndash;&gt;-->
+
+<!--&lt;!&ndash;        function basicSubscribe(random) {&ndash;&gt;-->
+<!--&lt;!&ndash;            var url = '/topic/test/' + random;&ndash;&gt;-->
+<!--&lt;!&ndash;            stompClient.subscribe(url, function (random) {&ndash;&gt;-->
+<!--&lt;!&ndash;                console.log('complete subscribe = ' + url + ' : ' + random.body);&ndash;&gt;-->
+<!--&lt;!&ndash;            });&ndash;&gt;-->
+<!--&lt;!&ndash;        }&ndash;&gt;-->
+
+<!--&lt;!&ndash;        function disconnect() {&ndash;&gt;-->
+<!--&lt;!&ndash;            if (stompClient !== null) {&ndash;&gt;-->
+<!--&lt;!&ndash;                stompClient.disconnect();&ndash;&gt;-->
+<!--&lt;!&ndash;                console.log('Disconnected');&ndash;&gt;-->
+<!--&lt;!&ndash;            }&ndash;&gt;-->
+<!--&lt;!&ndash;        }&ndash;&gt;-->
+
+<!--&lt;!&ndash;        function subscribe() {&ndash;&gt;-->
+<!--&lt;!&ndash;            var url = document.getElementById('subscribe-url').value;&ndash;&gt;-->
+<!--&lt;!&ndash;            stompClient.subscribe(url, function (message) {&ndash;&gt;-->
+<!--&lt;!&ndash;                console.log('Received message from ' + url + ': ' + message.body);&ndash;&gt;-->
+<!--&lt;!&ndash;                // Perform any additional actions with the received message here&ndash;&gt;-->
+<!--&lt;!&ndash;            });&ndash;&gt;-->
+<!--&lt;!&ndash;        }&ndash;&gt;-->
+
+<!--&lt;!&ndash;        function publish() {&ndash;&gt;-->
+<!--&lt;!&ndash;            var url = document.getElementById('publish-url').value;&ndash;&gt;-->
+<!--&lt;!&ndash;            var message = document.getElementById('publish-message').value;&ndash;&gt;-->
+<!--&lt;!&ndash;            stompClient.send(url, {}, message);&ndash;&gt;-->
+<!--&lt;!&ndash;            console.log('Published message to ' + url + ': ' + message);&ndash;&gt;-->
+<!--&lt;!&ndash;        }&ndash;&gt;-->
+
+<!--&lt;!&ndash;        // 삭제되었습니다&ndash;&gt;-->
+
+<!--&lt;!&ndash;    </script>&ndash;&gt;-->
+<!--&lt;!&ndash;</head>&ndash;&gt;-->
+<!--&lt;!&ndash;<body>&ndash;&gt;-->
+<!--&lt;!&ndash;<h1>WebSocket Test</h1>&ndash;&gt;-->
+<!--&lt;!&ndash;<p>Check the browser console for incoming messages.</p>&ndash;&gt;-->
+
+<!--&lt;!&ndash;&lt;!&ndash; 추가된 부분: 입력 언어 받아오기 &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;<h2>Enter Language:</h2>&ndash;&gt;-->
+<!--&lt;!&ndash;<select id="language">&ndash;&gt;-->
+<!--&lt;!&ndash;    <option value="KOREAN">KOREAN</option>&ndash;&gt;-->
+<!--&lt;!&ndash;    <option value="ENGLISH">ENGLISH</option>&ndash;&gt;-->
+<!--&lt;!&ndash;</select>&ndash;&gt;-->
+
+<!--&lt;!&ndash;&lt;!&ndash; 추가된 부분: 매칭 탐색 버튼 &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;<button onclick="connect()">매칭 탐색</button>&ndash;&gt;-->
+
+<!--&lt;!&ndash;<h2>Subscribe to URL:</h2>&ndash;&gt;-->
+<!--&lt;!&ndash;<input type="text" id="subscribe-url" placeholder="Enter URL to subscribe" />&ndash;&gt;-->
+<!--&lt;!&ndash;<button onclick="subscribe()">Subscribe</button>&ndash;&gt;-->
+
+<!--&lt;!&ndash;<h2>Publish Message:</h2>&ndash;&gt;-->
+<!--&lt;!&ndash;<input type="text" id="publish-url" placeholder="Enter URL to publish" />&ndash;&gt;-->
+<!--&lt;!&ndash;<input type="text" id="publish-message" placeholder="Enter message to publish" />&ndash;&gt;-->
+<!--&lt;!&ndash;<button onclick="publish()">Publish</button>&ndash;&gt;-->
+
+<!--&lt;!&ndash;</body>&ndash;&gt;-->
+<!--&lt;!&ndash;</html>&ndash;&gt;-->
+
 <!--<!DOCTYPE html>-->
 <!--<html>-->
 <!--<head>-->
-<!--    <title>WebSocket Test</title>-->
 <!--    <meta charset="UTF-8">-->
+<!--    <title>WebSocket Test</title>-->
 <!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>-->
 <!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>-->
 <!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>-->
-
 <!--    <script>-->
 <!--        var stompClient = null;-->
 
 <!--        function connect() {-->
-<!--            var language = document.getElementById('language').value;-->
-<!--            var random = Math.random(15) * 100000000000000000;-->
-<!--            var socket = new SockJS('http://localhost:8080/ws');-->
+<!--            let socket = new SockJS('http://localhost:8080/ws');-->
 <!--            stompClient = Stomp.over(socket);-->
-<!--            var headers = { "language": language, "path": random };-->
-<!--            stompClient.connect(headers, function (frame) {-->
-<!--                console.log('Connected: ' + frame);-->
-<!--                basicSubscribe(random);-->
+<!--            let headers = {"Authorization": "token"};-->
+<!--            stompClient.connect(headers, function () {-->
+<!--                console.log("커넥트 완료")-->
+<!--                basicSubscribe();-->
 <!--            });-->
 <!--        }-->
 
-<!--        function basicSubscribe(random) {-->
-<!--            var url = '/topic/test/' + random;-->
-<!--            stompClient.subscribe(url, function (random) {-->
-<!--                console.log('complete subscribe = ' + url + ' : ' + random.body);-->
-<!--            });-->
+<!--        function basicSubscribe() {-->
+<!--            let random = Math.random(15) * 1000000000000000000;-->
+<!--            let url = '/match/' + random;-->
+<!--            console.log("구독 시작. 목표 endpoint = " + url)-->
+<!--            stompClient.subscribe(url, onMessageReceived, {"authorization": "token"});-->
+<!--            console.log("구독 완료.")-->
+<!--            checkMatch(random);-->
+
 <!--        }-->
+
+<!--        function checkMatch(random) {-->
+<!--            let userLanguage = document.getElementById('userLanguage').value;-->
+<!--            let targetLanguage = document.getElementById('targetLanguage').value;-->
+<!--            let userId = document.getElementById('userId').value;-->
+<!--            let headers = {"Authorization" : "token", "userLanguage" : userLanguage, "targetLanguage": targetLanguage, "userId":userId, "path" : random }-->
+<!--            let endpoint = '/request/' + random-->
+<!--            stompClient.send(endpoint, headers, "directMatching check");-->
+
+
+<!--        }-->
+
+<!--        function onMessageReceived(data) {-->
+<!--            if(data.headers.isMatch==="true"){-->
+<!--                let sendurl = '/match/'+ data.headers.path-->
+<!--                let headers = {"Authorization": "token"}-->
+<!--                stompClient.send(sendurl, headers, "안녕? 나는 "+ document.getElementById('userId').value + " 이야!")-->
+<!--            }-->
+<!--        }-->
+<!--        function webRtcMessage(data){-->
+<!--        }-->
+<!--        // function onError(error) {-->
+<!--        //     console.log("onError 발동");-->
+<!--        // }-->
+
 
 <!--        function disconnect() {-->
 <!--            if (stompClient !== null) {-->
-<!--                stompClient.disconnect();-->
-<!--                console.log('Disconnected');-->
+<!--                stompClient.disconnect(defaultCallback,{"userId" : document.getElementById('userId').value});-->
 <!--            }-->
 <!--        }-->
-
-<!--        function subscribe() {-->
-<!--            var url = document.getElementById('subscribe-url').value;-->
-<!--            stompClient.subscribe(url, function (message) {-->
-<!--                console.log('Received message from ' + url + ': ' + message.body);-->
-<!--                // Perform any additional actions with the received message here-->
-<!--            });-->
+<!--        function defaultCallback(){-->
+<!--            console.log('Disconnect완료')-->
 <!--        }-->
-
-<!--        function publish() {-->
-<!--            var url = document.getElementById('publish-url').value;-->
-<!--            var message = document.getElementById('publish-message').value;-->
-<!--            stompClient.send(url, {}, message);-->
-<!--            console.log('Published message to ' + url + ': ' + message);-->
-<!--        }-->
-
-<!--        // 삭제되었습니다-->
-
+<!--        //-->
+<!--        // function subscribe() {-->
+<!--        //     let url = document.getElementById('subscribe-url').value;-->
+<!--        //     stompClient.subscribe(url, function (message) {-->
+<!--        //         console.log('Received message from ' + url + ': ' + message.body);-->
+<!--        //         // Perform any additional actions with the received message here-->
+<!--        //     });-->
+<!--        // }-->
+<!--        //-->
+<!--        // function unsubscribe() {-->
+<!--        //     let url = document.getElementById('unsubscribe-url').value;-->
+<!--        //     stompClient.unsubscribe(url);-->
+<!--        //     console.log('Unsubscribed from ' + url);-->
+<!--        // }-->
+<!--        //-->
+<!--        // function publish() {-->
+<!--        //     var url = document.getElementById('publish-url').value;-->
+<!--        //     var message = document.getElementById('publish-message').value;-->
+<!--        //     stompClient.send(url, {}, message);-->
+<!--        // }-->
 <!--    </script>-->
 <!--</head>-->
 <!--<body>-->
 <!--<h1>WebSocket Test</h1>-->
 <!--<p>Check the browser console for incoming messages.</p>-->
-
-<!--&lt;!&ndash; 추가된 부분: 입력 언어 받아오기 &ndash;&gt;-->
-<!--<h2>Enter Language:</h2>-->
-<!--<select id="language">-->
+<!--<h2>YourID:</h2>-->
+<!--<input type="text" id="userId" placeholder="input your ID"/>-->
+<!--<h2>Enter Your Language: </h2>-->
+<!--<select id="userLanguage">-->
 <!--    <option value="KOREAN">KOREAN</option>-->
 <!--    <option value="ENGLISH">ENGLISH</option>-->
 <!--</select>-->
+<!--<div></div>-->
+<!--<h2>Enter TargetLanguage: </h2>-->
+<!--<select id="targetLanguage">-->
+<!--    <option value="ENGLISH">ENGLISH</option>-->
+<!--    <option value="KOREAN">KOREAN</option>-->
 
-<!--&lt;!&ndash; 추가된 부분: 매칭 탐색 버튼 &ndash;&gt;-->
+<!--</select>-->
 <!--<button onclick="connect()">매칭 탐색</button>-->
 
-<!--<h2>Subscribe to URL:</h2>-->
-<!--<input type="text" id="subscribe-url" placeholder="Enter URL to subscribe" />-->
-<!--<button onclick="subscribe()">Subscribe</button>-->
-
-<!--<h2>Publish Message:</h2>-->
-<!--<input type="text" id="publish-url" placeholder="Enter URL to publish" />-->
-<!--<input type="text" id="publish-message" placeholder="Enter message to publish" />-->
-<!--<button onclick="publish()">Publish</button>-->
-
+<!--<button onclick="disconnect()">Disconnect</button> &lt;!&ndash; Disconnect 버튼 추가 &ndash;&gt;-->
 <!--</body>-->
 <!--</html>-->
+
 
 <!DOCTYPE html>
 <html>
@@ -92,104 +202,101 @@
     <script>
         var stompClient = null;
 
-        function connect() {
-            // let random = Math.random(15) * 1000000000000000000;
-            // let userLanguage = document.getElementById('userLanguage').value;
-            // let targetLanguage = document.getElementById('targetLanguage').value;
-            // let userId = document.getElementById('userId').value;
+        function connect(language) {
             let socket = new SockJS('http://localhost:8080/ws');
             stompClient = Stomp.over(socket);
-            let headers = {"Authorization": "token"};
+            let headers = { "Authorization": "token" };
             stompClient.connect(headers, function () {
-                console.log("커넥트 완료")
-                basicSubscribe();
+                console.log("커넥트 완료");
+                basicSubscribe(language);
             });
         }
 
-        function basicSubscribe() {
+        function basicSubscribe(language) {
             let random = Math.random(15) * 1000000000000000000;
             let url = '/match/' + random;
             console.log("구독 시작. 목표 endpoint = " + url)
-            stompClient.subscribe(url, onMessageReceived, {"authorization": "token"});
+            stompClient.subscribe(url, onMessageReceived, { "authorization": "token" });
             console.log("구독 완료.")
-            checkMatch(random);
-
+            checkMatch(random, language);
         }
 
-        function checkMatch(random) {
-            let userLanguage = document.getElementById('userLanguage').value;
-            let targetLanguage = document.getElementById('targetLanguage').value;
+        function checkMatch(random, language) {
+            let targetLanguage = language === "KOREAN" ? "ENGLISH" : "KOREAN";
             let userId = document.getElementById('userId').value;
-            let headers = {"Authorization" : "token", "userLanguage" : userLanguage, "targetLanguage": targetLanguage, "userId":userId, "path" : random }
+            let headers = { "Authorization": "token", "userLanguage": language, "targetLanguage": targetLanguage, "userId": userId, "path": random }
             let endpoint = '/request/' + random
             stompClient.send(endpoint, headers, "directMatching check");
-
-
         }
 
         function onMessageReceived(data) {
-            if(data.headers.isMatch==="true"){
-                let sendurl = '/match/'+ data.headers.path
-                let headers = {"Authorization": "token"}
-                stompClient.send(sendurl, headers, "안녕? 나는 "+ document.getElementById('userId').value + " 이야!")
-            }
-        }
-        function webRtcMessage(data){
-        }
-        // function onError(error) {
-        //     console.log("onError 발동");
-        // }
+            if (data.headers.isMatch === "true") {
+                let sendurl = '/match/' + data.headers.path
+                let headers = { "Authorization": "token" }
+                stompClient.send(sendurl, headers, "안녕? 나는 " + document.getElementById('userId').value + " 이야!")
 
+            }
+            let messageDisplay = document.getElementById('messageDisplay');
+            messageDisplay.innerText = data.body;
+        }
 
         function disconnect() {
             if (stompClient !== null) {
-                stompClient.disconnect(defaultCallback,{"userId" : document.getElementById('userId').value});
+                stompClient.disconnect(defaultCallback, { "userId": document.getElementById('userId').value });
             }
         }
-        function defaultCallback(){
+
+        function defaultCallback() {
             console.log('Disconnect완료')
         }
-        //
-        // function subscribe() {
-        //     let url = document.getElementById('subscribe-url').value;
-        //     stompClient.subscribe(url, function (message) {
-        //         console.log('Received message from ' + url + ': ' + message.body);
-        //         // Perform any additional actions with the received message here
-        //     });
-        // }
-        //
-        // function unsubscribe() {
-        //     let url = document.getElementById('unsubscribe-url').value;
-        //     stompClient.unsubscribe(url);
-        //     console.log('Unsubscribed from ' + url);
-        // }
-        //
-        // function publish() {
-        //     var url = document.getElementById('publish-url').value;
-        //     var message = document.getElementById('publish-message').value;
-        //     stompClient.send(url, {}, message);
-        // }
     </script>
+    <style>
+        body {
+            text-align: center; /* Center align the entire content */
+        }
+        /* Add CSS styles here */
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            max-width: 600px; /* Set a maximum width for the container */
+            margin: 0 auto; /* Center align the container */
+        }
+
+        /* Apply margin and border to the div containers */
+        .button-container > div {
+            border: 1px solid #ddd; /* Add borders to the div elements */
+            padding: 10px;
+        }
+        /* Apply styles for the message display div */
+        #messageDisplay {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 0 auto;
+            max-width: 600px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 <h1>WebSocket Test</h1>
 <p>Check the browser console for incoming messages.</p>
-<h2>YourID:</h2>
-<input type="text" id="userId" placeholder="input your ID"/>
-<h2>Enter Your Language: </h2>
-<select id="userLanguage">
-    <option value="KOREAN">KOREAN</option>
-    <option value="ENGLISH">ENGLISH</option>
-</select>
-<div></div>
-<h2>Enter TargetLanguage: </h2>
-<select id="targetLanguage">
-    <option value="ENGLISH">ENGLISH</option>
-    <option value="KOREAN">KOREAN</option>
+<h2>Your ID:</h2>
+<input type="text" id="userId" placeholder="input your ID" />
 
-</select>
-<button onclick="connect()">매칭 탐색</button>
-
+<!-- Match Buttons -->
+<div class="button-container">
+    <div>
+        <h2>한국어 유저이신가요?</h2>
+        <button onclick="connect('KOREAN')">영어 사용자 찾기</button>
+    </div>
+    <div>
+        <h2>Are you an English user?</h2>
+        <button onclick="connect('ENGLISH')">Find KOREAN USER</button>
+    </div>
+</div>
+<div id="messageDisplay"></div>
+<h2></h2>
 <button onclick="disconnect()">Disconnect</button> <!-- Disconnect 버튼 추가 -->
 </body>
 </html>

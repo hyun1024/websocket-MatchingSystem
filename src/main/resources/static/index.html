@@ -9,13 +9,20 @@
     <script>
         var stompClient = null;
 
+        function disableButtons() {
+            // Disable both buttons after clicking one of them
+            document.getElementById('koreanButton').disabled = true;
+            document.getElementById('englishButton').disabled = true;
+        }
         function connect(language) {
+            disableButtons();
             let socket = new SockJS('http://localhost:8080/ws');
             stompClient = Stomp.over(socket);
             let headers = { "Authorization": "token" };
             stompClient.connect(headers, function () {
                 console.log("커넥트 완료");
                 basicSubscribe(language);
+
             });
         }
 
@@ -95,15 +102,15 @@
 <div class="button-container">
     <div>
         <h2>한국어 유저이신가요?</h2>
-        <button onclick="connect('KOREAN')">영어 사용자 찾기</button>
+        <button id="koreanButton" onclick="connect('KOREAN')">영어 사용자 찾기</button>
     </div>
     <div>
         <h2>Are you an English user?</h2>
-        <button onclick="connect('ENGLISH')">Find KOREAN USER</button>
+        <button id="englishButton" onclick="connect('ENGLISH')">Find KOREAN USER</button>
     </div>
 </div>
 <div id="messageDisplay"></div>
 <h2></h2>
-<button onclick="disconnect()">Disconnect</button> <!-- Disconnect 버튼 추가 -->
+<!--<button onclick="disconnect()">Disconnect</button> &lt;!&ndash; Disconnect 버튼 추가 &ndash;&gt;-->
 </body>
 </html>

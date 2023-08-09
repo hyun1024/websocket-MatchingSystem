@@ -1,129 +1,144 @@
-<!--<!doctype html>-->
-<!--<html>-->
-<!--<head>-->
-<!--    <meta charset="UTF-8">-->
-<!--    <title>WebSocket 메시지 확인 페이지</title>-->
-<!--    <script src="https://cdn.jsdelivr.net/sockjs/latest/sockjs.min.js"></script>-->
-<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>-->
-
-<!--</head>-->
-<!--<body>-->
-<!--<h1>WebSocket 메시지 확인 페이지</h1>-->
-
-<!--<div id="log"></div>-->
-
-<!--<script>-->
-<!--    var socket = new WebSocket('ws://localhost:8080/ws');-->
-<!--    // WebSocket 연결 생성-->
-
-<!--    socket.onopen = function () {-->
-<!--        console.log("너도 뜨니?")-->
-<!--        alert('WebSocket 연결이 시작되었습니다.');-->
-<!--    };-->
-<!--    // STOMP 클라이언트 생성-->
-<!--    const client = Stomp.over(socket);-->
-
-<!--    // 연결 성공 시 호출되는 콜백 함수-->
-<!--    const onConnect = () => {-->
-<!--        console.log('STOMP 브로커에 연결되었습니다.');-->
-
-<!--// 구독 설정-->
-<!--        client.subscribe('/topic/test', (message) => {-->
-<!--            const body = message.body;-->
-<!--            console.log('메시지 수신:', body);-->
-
-<!--// 받은 메시지 처리를 여기에 작성하세요.-->
-<!--        });-->
-<!--    };-->
-
-<!--    // 연결 해제 시 호출되는 콜백 함수-->
-<!--    const onDisconnect = () => {-->
-<!--        console.log('STOMP 브로커와의 연결이 해제되었습니다.');-->
-<!--    };-->
-
-<!--    // STOMP 브로커에 연결-->
-<!--    client.connect({}, onConnect, onDisconnect);-->
-
-<!--    socket.onerror = function (event) {-->
-<!--        alert('WebSocket 에러: ', event);-->
-<!--    };-->
-
-<!--    socket.onclose = function (event) {-->
-<!--        console.log('onclose : ' + event)-->
-<!--        alert('WebSocket 연결이 종료되었습니다.', event);-->
-<!--    };-->
-
-<!--    // 메시지 수신-->
-<!--    socket.onmessage = function (event) {-->
-<!--        console.log('WebSocket으로부터 메시지를 수신했습니다:', event.data);-->
-<!--        var logDiv = document.getElementById('log');-->
-<!--        logDiv.innerHTML = logDiv.innerHTML + '<br/>' + event.data;-->
-<!--    };-->
-
-<!--</script>-->
-
-<!--</body>-->
-<!--</html>-->
-
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>WebSocket Test</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
     <script>
         var stompClient = null;
+        var token = "tokenvalue";
+        var userLanguage = null;
+        var userId = null;
+        window.onload = function() {
+            document.getElementById('matchButton').disabled = true;
+            document.getElementById('matchStopButton').disabled = true;
+        };
+        function disableUserSetting(){
+            document.getElementById('userId').disabled = true;
+            document.getElementById('koreanButton').disabled = true;
+            document.getElementById('englishButton').disabled = true;
+            document.getElementById('matchButton').disabled = false;
+        }
+        function disableButtons(matchingStarted) {
+            document.getElementById('matchButton').disabled = matchingStarted;
+            document.getElementById('matchStopButton').disabled = !matchingStarted;
 
-        function connect() {
-            var socket = new SockJS('/ws'); // Replace '/websocket-endpoint' with your actual WebSocket endpoint URL
+        }
+        function connect(language) {
+            userId = document.getElementById('userId').value;
+            disableUserSetting()
+            let socket = new SockJS('http://localhost:8080/ws');
             stompClient = Stomp.over(socket);
-            stompClient.connect({}, function (frame) {
-                console.log('Connected: ' + frame);
+            let headers = { "Authorization": token };
+            stompClient.connect(headers, function () {
+                console.log("커넥트 완료");
+                basicSubscribe(language);
+
             });
         }
 
+        function basicSubscribe(language) {
+            let url = '/match/' + userId;
+            console.log("구독 시작. 목표 endpoint = " + url)
+            stompClient.subscribe(url, onMessageReceived, { "authorization": "token" });
+            console.log("구독 완료.")
+            userLanguage = language;
+        }
+
+        function checkMatch() {
+            let targetLanguage = userLanguage === "KOREAN" ? "ENGLISH" : "KOREAN";
+            let headers = { "Authorization": token, "userLanguage": userLanguage, "targetLanguage": targetLanguage, "userId": userId, "path": userId }
+            let endpoint = '/request/start/' + userId
+            stompClient.send(endpoint, headers, "directMatching check");
+            disableButtons(true);
+        }
+
+        function onMessageReceived(data) {
+            if (data.headers.isMatch === "true") {
+                let matchingUser = data.headers.path
+                let sendurl = '/match/' + data.headers.path
+                let headers = { "Authorization": token }
+                stompClient.send( sendurl, headers, matchingUser + ": " + "안녕? 나는 " + matchingUser + " 이야!")
+
+            }
+            let messageDisplay = document.getElementById('messageDisplay');
+            messageDisplay.innerText = data.body;
+        }
+        function stopMatch(){
+            let userId = document.getElementById('userId').value;
+            let headers = {"Authorization" : token, "userId" : userId}
+            let endpoint = '/request/stop/' + userId
+            stompClient.send(endpoint, headers, "매칭 취소 신청")
+            disableButtons(false);
+        }
         function disconnect() {
             if (stompClient !== null) {
-                stompClient.disconnect();
-                console.log('Disconnected');
+                stompClient.disconnect(defaultCallback, { "userId": document.getElementById('userId').value });
             }
         }
 
-        function subscribe() {
-            var url = document.getElementById('subscribe-url').value;
-            stompClient.subscribe(url, function (message) {
-                console.log('Received message from ' + url + ': ' + message.body);
-                // Perform any additional actions with the received message here
-            });
+        function defaultCallback() {
+            console.log('Disconnect완료')
         }
-
-        function publish() {
-            var url = document.getElementById('publish-url').value;
-            var message = document.getElementById('publish-message').value;
-            stompClient.send(url, {}, message);
-            console.log('Published message to ' + url + ': ' + message);
-        }
-
-        window.onload = function () {
-            connect();
-        };
-
-        window.onbeforeunload = function () {
-            disconnect();
-        };
     </script>
+    <style>
+        body {
+            text-align: center; /* Center align the entire content */
+        }
+        /* Add CSS styles here */
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            max-width: 600px; /* Set a maximum width for the container */
+            margin: 0 auto; /* Center align the container */
+        }
+
+        /* Apply margin and border to the div containers */
+        .button-container > div {
+            border: 1px solid #ddd; /* Add borders to the div elements */
+            padding: 10px;
+        }
+        /* Apply styles for the message display div */
+        #messageDisplay {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 0 auto;
+            max-width: 600px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 <h1>WebSocket Test</h1>
 <p>Check the browser console for incoming messages.</p>
+<h2>Your ID:</h2>
+<input type="text" id="userId" placeholder="1~7 사이 값을 입력해주시면 됩니다." />
 
-<h2>Subscribe to URL:</h2>
-<input type="text" id="subscribe-url" placeholder="Enter URL to subscribe" />
-<button onclick="subscribe()">Subscribe</button>
+<!-- Match Buttons -->
+<div class="button-container">
+    <div>
+        <h2>한국어 유저이신가요?</h2>
+        <button id="koreanButton" onclick="connect('KOREAN')">영어 사용자 찾기</button>
+    </div>
+    <div>
+        <h2>Are you an English user?</h2>
+        <button id="englishButton" onclick="connect('ENGLISH')">Find KOREAN USER</button>
+    </div>
+</div>
+<div>
+    <h2>매칭을 시작할까요?</h2>
+    <button id="matchButton" onclick="checkMatch()">매칭 시작!</button>
+</div>
 
-<h2>Publish Message:</h2>
-<input type="text" id="publish-url" placeholder="Enter URL to publish" />
-<input type="text" id="publish-message" placeholder="Enter message to publish" />
-<button onclick="publish()">Publish</button>
+<div id="messageDisplay"></div>
+<h2></h2>
+<div>
+    <h2>매칭을 취소할까요?</h2>
+    <button id="matchStopButton" onclick="stopMatch()">매칭 종료</button>
+</div>
+<!--<button onclick="disconnect()">Disconnect</button> &lt;!&ndash; Disconnect 버튼 추가 &ndash;&gt;-->
 </body>
 </html>

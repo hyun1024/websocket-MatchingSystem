@@ -1,20 +1,19 @@
 package com.prac.websocket.service;
 
+import com.prac.websocket.dto.MatchInfoRequestDto;
 import com.prac.websocket.dto.RoomStatusDto;
-import com.prac.websocket.dto.UserMatchDto;
 import com.prac.websocket.entity.ActivateRoom;
 import com.prac.websocket.entity.ChatQueue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Block;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class MatchService {
-
     private final ChatQueue chatQueue;
     private final ActivateRoom activeRoom;
-
 
     @Autowired
     public MatchService(ChatQueue chatQueue, ActivateRoom activeRoom) {
@@ -22,9 +21,9 @@ public class MatchService {
         this.activeRoom = activeRoom;
     }
 
-    public synchronized RoomStatusDto checkDirectMatch(String userId) {
+    public synchronized RoomStatusDto checkDirectMatch(String loginId) {
         for (RoomStatusDto roomStatusDto : activeRoom.getActivateRooms()) {
-            if (roomStatusDto.getRequestUserId().equals(userId)) {
+            if (roomStatusDto.getUser2Endpoint().equals(loginId)) {
                 return roomStatusDto;
             }
         }
@@ -32,51 +31,46 @@ public class MatchService {
     }
 
 
-    public synchronized UserMatchDto findMatch(UserMatchDto userMatchDto) {
-        log.info("findMatch 시작");
+    public synchronized void findMatch(MatchInfoRequestDto matchInfoRequestDto) {
         if (chatQueue.getChatQueue().isEmpty()) {
-            directInsertQueueIfFirstUser(userMatchDto);
-            return null;
+            addUserToQueueIfEmpty(matchInfoRequestDto);
+            return;
         }
-        if (chatQueue.getChatQueue().containsKey(userMatchDto.getUserId())) {
-            log.info("이미 대기열에 참여중인 userId가 재시도.");
-            return null;
-        }
-        searchUserFromCondition(userMatchDto);
-        return userMatchDto;
+        isUserAlreadyInCollection(matchInfoRequestDto);
+
+        searchUserFromCondition(matchInfoRequestDto);
     }
 
-    private void directInsertQueueIfFirstUser(UserMatchDto userMatchDto) {
-        log.info("대기중인 유저가 없으므로 대기리스트에 추가");
-        chatQueue.getChatQueue().put(userMatchDto.getUserId(), userMatchDto);
-
+    private void addUserToQueueIfEmpty(MatchInfoRequestDto matchInfoRequestDto) {
+        chatQueue.getChatQueue().put(matchInfoRequestDto.getUserEndpoint(), matchInfoRequestDto);
     }
 
-    private UserMatchDto searchUserFromCondition(UserMatchDto requestUserDto) {
-        for (UserMatchDto waitUserDto : chatQueue.getChatQueue().values()) {
-            if (waitUserDto.getUserLanguage().equals(requestUserDto.getTargetLanguage())) {
-                activeRoom.getActivateRooms().add(RoomStatusDto.builder()
-                        .waitUserId(waitUserDto.getUserId())
-                        .requestUserId(requestUserDto.getUserId())
-                        .waitUserEndpoint(waitUserDto.getUserEndpoint())
-                        .requestUserEndpoint(requestUserDto.getUserEndpoint())
-                        .build()
-                );
-                chatQueue.getChatQueue().remove(waitUserDto.getUserId());
-                log.info("매칭 성공. 남은 " + requestUserDto.getTargetLanguage() + " 매칭 대기자 : " + chatQueue.getChatQueue().size() + " 명");
-                log.info("추가 후 현재 활성화된 대화 방 수 : " + activeRoom.getActivateRooms().size());
+    private void isUserAlreadyInCollection(MatchInfoRequestDto matchInfoRequestDto) {
+        if (chatQueue.getChatQueue().containsKey(matchInfoRequestDto.getUserEndpoint())) {
+            throw new IllegalArgumentException("이미 대기열에 등록된 유저입니다. 매칭 정보를 변경하고 싶은 경우 매칭 취소 후 다시 시도해주세요");
+        }
+    }
+
+    private void searchUserFromCondition(MatchInfoRequestDto requestUserDto) {
+        for (MatchInfoRequestDto waitUserDto : chatQueue.getChatQueue().values()) {
+            if (isTargetLanguage(waitUserDto, requestUserDto)) {
+                activeRoom.getActivateRooms().add(RoomStatusDto.of(waitUserDto, requestUserDto));
+                chatQueue.getChatQueue().remove(waitUserDto.getUserEndpoint());
+                log.info("현재 활성화된 대화 방 수 : " + activeRoom.getActivateRooms().size());
                 requestUserDto.successMatch(waitUserDto);
-                return requestUserDto;
-            } else {
-                chatQueue.getChatQueue().put(requestUserDto.getUserId(), requestUserDto);
-                log.info("매칭에 실패했으므로 대기 리스트에 추가. 현재 " + requestUserDto.getUserLanguage() + " 사용자 매칭 대기자 : " + chatQueue.getChatQueue().size() + " 명");
-                return requestUserDto;
+                return;
             }
         }
-        return null;
+        chatQueue.getChatQueue().put(requestUserDto.getUserEndpoint(), requestUserDto);
+    }
+
+    private boolean isTargetLanguage(MatchInfoRequestDto waitUserDto, MatchInfoRequestDto requestUserDto) {
+        return waitUserDto.getUserLanguage().equals(requestUserDto.getTargetLanguage());
     }
 
     public void removeFromList(String userId) {
+        log.info("chatQueue size = " + chatQueue.getChatQueue().size());
         chatQueue.getChatQueue().remove(userId);
+        log.info("remove 후 chatQueue size = " + chatQueue.getChatQueue().size());
     }
 }

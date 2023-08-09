@@ -10,18 +10,22 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class RoomStatusDto {
 
-    private String waitUserId;
-    private String requestUserId;
-    private String waitUserEndpoint;
-    private String requestUserEndpoint;
+    private String user1Endpoint;
+    private String user2Endpoint;
     private LocalDateTime createdAt;
 
     @Builder
-    public RoomStatusDto(String waitUserId, String requestUserId, String waitUserEndpoint, String requestUserEndpoint) {
-        this.waitUserId = waitUserId;
-        this.requestUserId = requestUserId;
-        this.waitUserEndpoint = waitUserEndpoint;
-        this.requestUserEndpoint = requestUserEndpoint;
+    public RoomStatusDto(String user1Endpoint, String user2Endpoint) {
+        this.user1Endpoint = user1Endpoint;
+        this.user2Endpoint = user2Endpoint;
         this.createdAt = LocalDateTime.now();
     }
+
+    public static RoomStatusDto of(MatchInfoRequestDto waitUserDto, MatchInfoRequestDto requestUserDto){
+        return RoomStatusDto.builder()
+                .user1Endpoint(waitUserDto.getUserEndpoint())
+                .user2Endpoint(requestUserDto.getUserEndpoint())
+                .build();
+    }
 }
+

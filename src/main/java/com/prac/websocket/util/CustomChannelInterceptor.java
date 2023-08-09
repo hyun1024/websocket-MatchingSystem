@@ -12,6 +12,11 @@ import org.springframework.messaging.support.ChannelInterceptor;
 @Order(Ordered.HIGHEST_PRECEDENCE + 99)
 @Slf4j
 public class CustomChannelInterceptor implements ChannelInterceptor {
+
+
+    public CustomChannelInterceptor() {
+    }
+
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);

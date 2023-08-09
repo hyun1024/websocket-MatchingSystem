@@ -1,6 +1,6 @@
 package com.prac.websocket.entity;
 
-import com.prac.websocket.dto.UserMatchDto;
+import com.prac.websocket.dto.MatchInfoRequestDto;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,7 +14,7 @@ import java.util.*;
 @Getter
 public class ChatQueue {
 
-    private final Map<String, UserMatchDto> chatQueue = Collections.synchronizedMap(new LinkedHashMap<>());
+    private final Map<String, MatchInfoRequestDto> chatQueue = Collections.synchronizedMap(new LinkedHashMap<>());
 
     @Scheduled(fixedRate = 30 * 60 * 1000) // 30분(ms 단위)
     public void removeInactiveUserMatches() {
@@ -22,19 +22,18 @@ public class ChatQueue {
 
         List<String> removedUserIds = new ArrayList<>();
         synchronized (chatQueue) {
-            Iterator<Map.Entry<String, UserMatchDto>> iterator = chatQueue.entrySet().iterator();
+            Iterator<Map.Entry<String, MatchInfoRequestDto>> iterator = chatQueue.entrySet().iterator();
 
             while (iterator.hasNext()) {
-                Map.Entry<String, UserMatchDto> entry = iterator.next();
-                UserMatchDto userMatchDto = entry.getValue();
-                if (userMatchDto.getCreatedAt().isBefore(thirtyMinutesAgo)) {
+                Map.Entry<String, MatchInfoRequestDto> entry = iterator.next();
+                MatchInfoRequestDto matchInfoRequestDto = entry.getValue();
+                if (matchInfoRequestDto.getCreatedAt().isBefore(thirtyMinutesAgo)) {
                     iterator.remove();
-                    removedUserIds.add(entry.getKey());
+                    removedUserIds.add(entry.getKey().toString());
                 }
             }
         }
 
-        log.info("Removed {} inactive UserMatchDto(s) with userId(s): {}", removedUserIds.size(), removedUserIds);
+        log.info("Removed {} inactive MatchInfoRequestDto(s) with userId(s): {}", removedUserIds.size(), removedUserIds);
     }
-
 }

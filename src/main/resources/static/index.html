@@ -8,17 +8,30 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
     <script>
         var stompClient = null;
-
-        function disableButtons() {
-            // Disable both buttons after clicking one of them
+        var token = "tokenvalue";
+        var userLanguage = null;
+        var userId = null;
+        window.onload = function() {
+            document.getElementById('matchButton').disabled = true;
+            document.getElementById('matchStopButton').disabled = true;
+        };
+        function disableUserSetting(){
+            document.getElementById('userId').disabled = true;
             document.getElementById('koreanButton').disabled = true;
             document.getElementById('englishButton').disabled = true;
+            document.getElementById('matchButton').disabled = false;
+        }
+        function disableButtons(matchingStarted) {
+            document.getElementById('matchButton').disabled = matchingStarted;
+            document.getElementById('matchStopButton').disabled = !matchingStarted;
+
         }
         function connect(language) {
-            disableButtons();
+            userId = document.getElementById('userId').value;
+            disableUserSetting()
             let socket = new SockJS('http://localhost:8080/ws');
             stompClient = Stomp.over(socket);
-            let headers = { "Authorization": "token" };
+            let headers = { "Authorization": token };
             stompClient.connect(headers, function () {
                 console.log("커넥트 완료");
                 basicSubscribe(language);
@@ -27,33 +40,39 @@
         }
 
         function basicSubscribe(language) {
-            let random = Math.random(15) * 1000000000000000000;
-            let url = '/match/' + random;
+            let url = '/match/' + userId;
             console.log("구독 시작. 목표 endpoint = " + url)
             stompClient.subscribe(url, onMessageReceived, { "authorization": "token" });
             console.log("구독 완료.")
-            checkMatch(random, language);
+            userLanguage = language;
         }
 
-        function checkMatch(random, language) {
-            let targetLanguage = language === "KOREAN" ? "ENGLISH" : "KOREAN";
-            let userId = document.getElementById('userId').value;
-            let headers = { "Authorization": "token", "userLanguage": language, "targetLanguage": targetLanguage, "userId": userId, "path": random }
-            let endpoint = '/request/' + random
+        function checkMatch() {
+            let targetLanguage = userLanguage === "KOREAN" ? "ENGLISH" : "KOREAN";
+            let headers = { "Authorization": token, "userLanguage": userLanguage, "targetLanguage": targetLanguage, "userId": userId, "path": userId }
+            let endpoint = '/request/start/' + userId
             stompClient.send(endpoint, headers, "directMatching check");
+            disableButtons(true);
         }
 
         function onMessageReceived(data) {
             if (data.headers.isMatch === "true") {
+                let matchingUser = data.headers.path
                 let sendurl = '/match/' + data.headers.path
-                let headers = { "Authorization": "token" }
-                stompClient.send(sendurl, headers, "안녕? 나는 " + document.getElementById('userId').value + " 이야!")
+                let headers = { "Authorization": token }
+                stompClient.send( sendurl, headers, matchingUser + ": " + "안녕? 나는 " + matchingUser + " 이야!")
 
             }
             let messageDisplay = document.getElementById('messageDisplay');
             messageDisplay.innerText = data.body;
         }
-
+        function stopMatch(){
+            let userId = document.getElementById('userId').value;
+            let headers = {"Authorization" : token, "userId" : userId}
+            let endpoint = '/request/stop/' + userId
+            stompClient.send(endpoint, headers, "매칭 취소 신청")
+            disableButtons(false);
+        }
         function disconnect() {
             if (stompClient !== null) {
                 stompClient.disconnect(defaultCallback, { "userId": document.getElementById('userId').value });
@@ -96,7 +115,7 @@
 <h1>WebSocket Test</h1>
 <p>Check the browser console for incoming messages.</p>
 <h2>Your ID:</h2>
-<input type="text" id="userId" placeholder="input your ID" />
+<input type="text" id="userId" placeholder="1~7 사이 값을 입력해주시면 됩니다." />
 
 <!-- Match Buttons -->
 <div class="button-container">
@@ -109,8 +128,17 @@
         <button id="englishButton" onclick="connect('ENGLISH')">Find KOREAN USER</button>
     </div>
 </div>
+<div>
+    <h2>매칭을 시작할까요?</h2>
+    <button id="matchButton" onclick="checkMatch()">매칭 시작!</button>
+</div>
+
 <div id="messageDisplay"></div>
 <h2></h2>
+<div>
+    <h2>매칭을 취소할까요?</h2>
+    <button id="matchStopButton" onclick="stopMatch()">매칭 종료</button>
+</div>
 <!--<button onclick="disconnect()">Disconnect</button> &lt;!&ndash; Disconnect 버튼 추가 &ndash;&gt;-->
 </body>
 </html>
